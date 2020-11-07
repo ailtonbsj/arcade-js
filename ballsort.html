@@ -18,7 +18,6 @@
             this.x = x
             this.y = y
             this.color = color
-            this.render()
         }
         render() {
             throw 'Need implement!'
@@ -36,12 +35,18 @@
     }
 
     class Bola extends Elemento {
+        static w = 48
+        static h = 50
+        constructor(id, x, y, color) {
+            super(id, x, y, color)
+            this.render()
+        }
         render() {
             let div = document.createElement('div')
             div.setAttribute('id', this.id)
             div.style.backgroundColor = this.color
-            div.style.width = '88px'
-            div.style.height = '90px'
+            div.style.width = `${Bola.w}px`
+            div.style.height = `${Bola.h}px`
             div.style.borderStyle = 'solid'
             div.style.borderColor = 'black'
             div.style.borderWidth = '1px'
@@ -55,18 +60,23 @@
     }
 
     class Tubo extends Elemento {
+        static bolasPorTubo = 5
+        static larguraBorda = 5
+        static h = Bola.h * Tubo.bolasPorTubo
+        static w = Bola.w + 2 * Tubo.larguraBorda
         constructor(id, x, y, color) {
             super(id, x, y, color)
             this.bolas = []
+            this.render()
         }
         render() {
             this.palco.innerHTML += `<div id="${this.id}" style="
-                width: 90px;
-                height: 450px;
+                width: ${Bola.w}px;
+                height: ${Tubo.h}px;
                 position: absolute;
-                border-bottom: 10px solid black;
-                border-left: 10px solid black;
-                border-right: 10px solid black;
+                border-bottom: ${Tubo.larguraBorda}px solid black;
+                border-left: ${Tubo.larguraBorda}px solid black;
+                border-right: ${Tubo.larguraBorda}px solid black;
                 top: ${this.y}px;
                 left: ${this.x}px;
                 z-index: 3;
@@ -80,8 +90,9 @@
         }
         addBola(id, cor) {
             const b = new Bola(
-                id, this.x + 10,
-                (this.y + 360) - (this.bolas.length * 90),
+                id,
+                this.x + Tubo.larguraBorda,
+                (this.y + Tubo.h - Bola.h) - (this.bolas.length * Bola.h),
                 cor
             )
             this.bolas.push(b)
@@ -96,18 +107,27 @@
     }
 
     class Mesa {
+        static tubosVazios = 2
+        static cores = [
+                'red', 'green', 'blue', 'yellow', 'aqua', 'magenta',
+                'crimson', 'chocolate', 'gray', 'black', 'brown', 'orange',
+                'purple', 'lime', 'white']
         constructor() {
             this.tubos = []
             this.mistura = []
-            this.cores = [
-                'red', 'green', 'blue', 'yellow', 'aqua', 'magenta',
-                'crimson','chocolate','gray','black', 'brown', 'orange',
-                'violet', 'lime','white']
             this.coresAll = []
-            for (let i = 0; i < MAX_TUBO-2; i++)
-                for (let j = 0; j < 5; j++) this.coresAll.push(this.cores[i])
+            for (let i = 0; i < MAX_TUBO - Mesa.tubosVazios; i++)
+                for (let j = 0; j < 5; j++) this.coresAll.push(Mesa.cores[i])
+            
+            let iMax = 0
+            while(10 + Tubo.w + ((Tubo.w+10) * iMax) < document.body.clientWidth) iMax++
+            let posY = 10
             for (let i = 0; i < MAX_TUBO; i++) {
-                this.tubos.push(new Tubo('tubo' + i, 20 + 200 * i, 10, 'blue'))
+                let posX = 10 + ((Tubo.w+10) * (i % iMax))
+                if(i % iMax == 0 && i != 0) posY += (Tubo.h + Bola.h)
+                this.tubos.push(
+                    new Tubo('tubo' + i, posX, posY, 'blue')
+                )
             }
             this.preencherTubos()
         }
@@ -161,25 +181,31 @@
                     }
                     ultimaBola = bola
                 })
-                if (tubo.bolas.length == 5 || tubo.bolas.length == 0)
+                if (tubo.bolas.length == Tubo.bolasPorTubo || tubo.bolas.length == 0)
                     ganhou = ganhou && corIguais
                 else ganhou = false
             })
 
             if (ganhou) {
-                if(MAX_TUBO < 17) alert("PARABENS VOCE GANHOU!!!")
+                if (MAX_TUBO < (Mesa.cores.length + Mesa.tubosVazios)) alert("PARABENS VOCE GANHOU!!!")
                 else {
                     alert("VOCE COMPLETOU TUDO! PARABENS!")
                     MAX_TUBO = 3
                 }
-                localStorage.setItem('MAX_TUBO', MAX_TUBO+1)
+                localStorage.setItem('MAX_TUBO', MAX_TUBO + 1)
                 location.reload()
             }
         }
     }
 
     let MAX_TUBO = parseInt(localStorage.getItem('MAX_TUBO'))
-    if(!MAX_TUBO) MAX_TUBO = 4
+    if (!MAX_TUBO) MAX_TUBO = 3
+    
+    if(MAX_TUBO > 14) Mesa.tubosVazios = 4
+    else if(MAX_TUBO > 10) Mesa.tubosVazios = 3
+    else if(MAX_TUBO > 3) Mesa.tubosVazios = 2
+    else Mesa.tubosVazios = 1
+
     const player = new Player()
     const mesa = new Mesa()
 </script>
