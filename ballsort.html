@@ -109,22 +109,22 @@
     class Mesa {
         static tubosVazios = 2
         static cores = [
-                'red', 'green', 'blue', 'yellow', 'aqua', 'magenta',
-                'crimson', 'chocolate', 'gray', 'black', 'brown', 'orange',
-                'purple', 'lime', 'white']
+            'red', 'green', 'blue', 'yellow', 'aqua', 'magenta',
+            'crimson', 'chocolate', 'gray', 'black', 'brown', 'orange',
+            'purple', 'lime', 'white']
         constructor() {
             this.tubos = []
             this.mistura = []
             this.coresAll = []
             for (let i = 0; i < MAX_TUBO - Mesa.tubosVazios; i++)
                 for (let j = 0; j < 5; j++) this.coresAll.push(Mesa.cores[i])
-            
+
             let iMax = 0
-            while(10 + Tubo.w + ((Tubo.w+10) * iMax) < document.body.clientWidth) iMax++
+            while (10 + Tubo.w + ((Tubo.w + 10) * iMax) < document.body.clientWidth) iMax++
             let posY = 10
             for (let i = 0; i < MAX_TUBO; i++) {
-                let posX = 10 + ((Tubo.w+10) * (i % iMax))
-                if(i % iMax == 0 && i != 0) posY += (Tubo.h + Bola.h)
+                let posX = 10 + ((Tubo.w + 10) * (i % iMax))
+                if (i % iMax == 0 && i != 0) posY += (Tubo.h + Bola.h)
                 this.tubos.push(
                     new Tubo('tubo' + i, posX, posY, 'blue')
                 )
@@ -159,6 +159,7 @@
                 else if (tubo.bolas.length < 5 &&
                     tubo.bolas[tubo.bolas.length - 1].color == this.mao.color) {
                     tubo.addBola(this.mao.id, this.mao.color)
+                    this.checarSeGanhou()
                 } else {
                     this.ultimoTubo.addBola(this.mao.id, this.mao.color)
                 }
@@ -168,7 +169,6 @@
                 this.mao = tubo.removeBola()
                 this.ultimoTubo = tubo
             }
-            this.checarSeGanhou()
         }
         checarSeGanhou() {
             let ganhou = true
@@ -187,23 +187,31 @@
             })
 
             if (ganhou) {
-                if (MAX_TUBO < (Mesa.cores.length + Mesa.tubosVazios)) alert("PARABENS VOCE GANHOU!!!")
+                if (MAX_TUBO < (Mesa.cores.length + Mesa.tubosVazios)) {
+                    setTimeout(function () {
+                        alert("PARABENS VOCE GANHOU!!!")
+                        localStorage.setItem('MAX_TUBO', MAX_TUBO + 1)
+                        location.reload()
+                    }, 1000)
+                }
                 else {
-                    alert("VOCE COMPLETOU TUDO! PARABENS!")
+                    setTimeout(function () {
+                        alert("VOCE COMPLETOU TUDO! PARABENS!")
+                        localStorage.setItem('MAX_TUBO', MAX_TUBO + 1)
+                        location.reload()
+                    }, 1000)
                     MAX_TUBO = 3
                 }
-                localStorage.setItem('MAX_TUBO', MAX_TUBO + 1)
-                location.reload()
             }
         }
     }
 
     let MAX_TUBO = parseInt(localStorage.getItem('MAX_TUBO'))
     if (!MAX_TUBO) MAX_TUBO = 3
-    
-    if(MAX_TUBO > 14) Mesa.tubosVazios = 4
-    else if(MAX_TUBO > 10) Mesa.tubosVazios = 3
-    else if(MAX_TUBO > 3) Mesa.tubosVazios = 2
+
+    if (MAX_TUBO > 14) Mesa.tubosVazios = 4
+    else if (MAX_TUBO > 10) Mesa.tubosVazios = 3
+    else if (MAX_TUBO > 3) Mesa.tubosVazios = 2
     else Mesa.tubosVazios = 1
 
     const player = new Player()
