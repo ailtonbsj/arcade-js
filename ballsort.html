@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="palco"></div>
+</body>
+<script>
+    class Elemento {
+        constructor(id, x, y, color) {
+            this.palco = document.getElementById('palco')
+            this.id = id
+            this.x = x
+            this.y = y
+            this.color = color
+            this.render()
+        }
+        render() {
+            throw 'Need implement!'
+        }
+        setX(x) {
+            this.x = x
+            const el = document.getElementById(this.id)
+            el.style.left = this.x + 'px'
+        }
+        setY(y) {
+            this.y = y
+            const el = document.getElementById(this.id)
+            el.style.top = this.y + 'px'
+        }
+    }
+
+    class Bola extends Elemento {
+        render() {
+            let div = document.createElement('div')
+            div.setAttribute('id', this.id)
+            div.style.backgroundColor = this.color
+            div.style.width = '88px'
+            div.style.height = '90px'
+            div.style.borderStyle = 'solid'
+            div.style.borderColor = 'black'
+            div.style.borderWidth = '1px'
+            div.style.borderRadius = '45px'
+            div.style.position = 'absolute'
+            div.style.top = this.y + 'px'
+            div.style.left = this.x + 'px'
+            div.style.zIndex = 2
+            this.palco.appendChild(div)
+        }
+    }
+
+    class Tubo extends Elemento {
+        constructor(id, x, y, color) {
+            super(id, x, y, color)
+            this.bolas = []
+        }
+        render() {
+            this.palco.innerHTML += `<div id="${this.id}" style="
+                width: 90px;
+                height: 450px;
+                position: absolute;
+                border-bottom: 10px solid black;
+                border-left: 10px solid black;
+                border-right: 10px solid black;
+                top: ${this.y}px;
+                left: ${this.x}px;
+                z-index: 3;
+                "></div>`
+            let self = this
+            window.addEventListener('load', function () {
+                document.getElementById(self.id).addEventListener('click', function () {
+                    player.pegarBola(self)
+                })
+            })
+        }
+        addBola(id, cor) {
+            const b = new Bola(
+                id, this.x + 10,
+                (this.y + 360) - (this.bolas.length * 90),
+                cor
+            )
+            this.bolas.push(b)
+        }
+        removeBola() {
+            if (this.bolas.length > 0) {
+                const b = this.bolas.pop()
+                document.getElementById(b.id).remove()
+                return { id: b.id, color: b.color }
+            } else return false
+        }
+    }
+
+    class Mesa {
+        constructor() {
+            this.tubos = []
+            this.mistura = []
+            this.cores = [
+                'red', 'green', 'blue', 'yellow', 'aqua', 'magenta',
+                'crimson','chocolate','gray','black', 'brown', 'orange',
+                'violet', 'lime','white']
+            this.coresAll = []
+            for (let i = 0; i < MAX_TUBO-2; i++)
+                for (let j = 0; j < 5; j++) this.coresAll.push(this.cores[i])
+            for (let i = 0; i < MAX_TUBO; i++) {
+                this.tubos.push(new Tubo('tubo' + i, 20 + 200 * i, 10, 'blue'))
+            }
+            this.preencherTubos()
+        }
+        misturar() {
+            do {
+                let sorteio = Math.floor(Math.random() * this.coresAll.length)
+                this.mistura.push(this.coresAll.splice(sorteio, 1)[0])
+            } while (this.coresAll.length > 0)
+        }
+        preencherTubos() {
+            this.misturar()
+            let cont = 0
+            do {
+                let cor = this.mistura.pop()
+                this.tubos[Math.floor(cont / 5)].addBola('bola' + cont, cor)
+                cont++
+            } while (this.mistura.length > 0)
+        }
+    }
+
+    class Player {
+        constructor() {
+            this.mao = null;
+            this.ultimoTubo = null
+        }
+        pegarBola(tubo) {
+            if (this.mao) {
+                if (tubo.bolas.length == 0) tubo.addBola(this.mao.id, this.mao.color)
+                else if (tubo.bolas.length < 5 &&
+                    tubo.bolas[tubo.bolas.length - 1].color == this.mao.color) {
+                    tubo.addBola(this.mao.id, this.mao.color)
+                } else {
+                    this.ultimoTubo.addBola(this.mao.id, this.mao.color)
+                }
+                this.ultimoTubo = null
+                this.mao = null
+            } else {
+                this.mao = tubo.removeBola()
+                this.ultimoTubo = tubo
+            }
+            this.checarSeGanhou()
+        }
+        checarSeGanhou() {
+            let ganhou = true
+            mesa.tubos.forEach(tubo => {
+                let corIguais = true
+                let ultimaBola = null
+                tubo.bolas.forEach(bola => {
+                    if (ultimaBola != null) {
+                        if (ultimaBola.color != bola.color) corIguais = false
+                    }
+                    ultimaBola = bola
+                })
+                if (tubo.bolas.length == 5 || tubo.bolas.length == 0)
+                    ganhou = ganhou && corIguais
+                else ganhou = false
+            })
+
+            if (ganhou) {
+                if(MAX_TUBO < 17) alert("PARABENS VOCE GANHOU!!!")
+                else {
+                    alert("VOCE COMPLETOU TUDO! PARABENS!")
+                    MAX_TUBO = 3
+                }
+                localStorage.setItem('MAX_TUBO', MAX_TUBO+1)
+                location.reload()
+            }
+        }
+    }
+
+    let MAX_TUBO = parseInt(localStorage.getItem('MAX_TUBO'))
+    if(!MAX_TUBO) MAX_TUBO = 4
+    const player = new Player()
+    const mesa = new Mesa()
+</script>
+
+</html>
